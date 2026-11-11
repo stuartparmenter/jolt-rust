@@ -1,6 +1,6 @@
 use std::mem::transmute;
 
-use joltc_sys::*;
+use crate::raw::*;
 
 /// Represents an object layer, which is internally either a u16 or a u32.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -1,9 +1,10 @@
 #![allow(non_snake_case)]
+use crate::jolt;
 
 use std::ffi::{c_uint, c_void};
 use std::marker::PhantomData;
 
-use joltc_sys::*;
+use crate::raw::*;
 use paste::paste;
 
 use crate::remote_drop::RemoteDrop;
@@ -503,7 +504,7 @@ pub struct CastShapeBase {
 impl CastShapeBase {
     pub fn update_early_out_fraction(&mut self, fraction: f32) {
         unsafe {
-            JPC_CastShapeCollector_UpdateEarlyOutFraction(self.base, fraction);
+            jolt::pin(self.base).cast_early_out(fraction);
         }
     }
 }
@@ -546,7 +547,7 @@ pub struct CollideShapeBase {
 impl CollideShapeBase {
     pub fn update_early_out_fraction(&mut self, fraction: f32) {
         unsafe {
-            JPC_CollideShapeCollector_UpdateEarlyOutFraction(self.base, fraction);
+            jolt::pin(self.base).collide_early_out(fraction);
         }
     }
 }

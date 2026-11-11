@@ -1,3 +1,0 @@
-[submodule "crates/joltc-sys/JoltC"]
-	path = crates/joltc-sys/JoltC
-	url = ../JoltC.git

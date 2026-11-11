@@ -4,8 +4,8 @@
 use std::ffi::{c_char, c_uint, CStr, CString};
 use std::ptr;
 
-// Everything prefixed with `JPC_` comes from the joltc_sys crate.
-use joltc_sys::*;
+// Everything prefixed with `JPC_` comes from rolt::raw.
+use rolt::raw::*;
 
 use rolt::{
     BroadPhaseLayer, BroadPhaseLayerInterface, CastShapeArgs, CastShapeCollectorImpl,
@@ -90,7 +90,7 @@ fn main() {
     rolt::register_types();
 
     unsafe {
-        joltc_sys::JPC_SetAssertFailed(Some(assert_failed));
+        rolt::raw::JPC_SetAssertFailed(Some(assert_failed));
 
         let temp_allocator = JPC_TempAllocatorImpl_new(10 * 1024 * 1024);
 

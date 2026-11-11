@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use joltc_sys::*;
+use crate::raw::*;
 
 use crate::BodyId;
 
@@ -21,12 +21,12 @@ impl<'interface> Body<'interface> {
     }
 
     pub fn id(&self) -> BodyId {
-        let raw = unsafe { JPC_Body_GetID(self.inner) };
+        let raw = unsafe { (&*self.inner).GetID().0 };
         BodyId::new(raw)
     }
 
     pub fn user_data(&self) -> u64 {
-        let raw = unsafe { JPC_Body_GetUserData(self.inner) };
+        let raw = unsafe { (&*self.inner).body_user_data() };
         raw
     }
 

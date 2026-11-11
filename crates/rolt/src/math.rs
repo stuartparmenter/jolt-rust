@@ -1,9 +1,9 @@
-use joltc_sys::{JPC_Color, JPC_DVec3, JPC_Mat44, JPC_Quat, JPC_Vec3, JPC_Vec4};
+use crate::raw::{JPC_Color, JPC_DVec3, JPC_Mat44, JPC_Quat, JPC_Vec3, JPC_Vec4};
 
 /// The type used for representing world space values.
 ///
 /// Either `f32` (default) or `f64` (`double-precision` feature).
-pub use joltc_sys::Real;
+pub use crate::raw::Real;
 
 pub use glam::{DVec3, Mat4, Quat, Vec3, Vec4};
 

@@ -1,6 +1,7 @@
+use crate::jolt;
 use std::ptr;
 
-use joltc_sys::*;
+use crate::raw::*;
 
 use crate::{
     BodyInterface, BroadPhaseLayerInterfaceImpl, ContactListenerImpl, NarrowPhaseQuery,
@@ -56,15 +57,14 @@ impl PhysicsSystem {
         self.object_layer_pair_filter = Some(olpf);
 
         unsafe {
-            JPC_PhysicsSystem_Init(
-                self.raw,
+            jolt::pin(self.raw).Init(
                 max_bodies,
                 num_body_mutexes,
                 max_body_pairs,
                 max_contact_constraints,
-                bpli_raw,
-                ovbplf_raw,
-                olpf_raw,
+                &*(bpli_raw),
+                &*(ovbplf_raw),
+                &*(olpf_raw),
             );
         }
     }
@@ -78,7 +78,7 @@ impl PhysicsSystem {
         self.sim_shape_filter = Some(sim_shape_filter);
 
         unsafe {
-            JPC_PhysicsSystem_SetSimShapeFilter(self.raw, raw);
+            jolt::pin(self.raw).SetSimShapeFilter(raw);
         }
     }
 
@@ -92,18 +92,18 @@ impl PhysicsSystem {
             self.contact_listener = Some(contact_listener);
 
             unsafe {
-                JPC_PhysicsSystem_SetContactListener(self.raw, raw);
+                jolt::pin(self.raw).SetContactListener(raw);
             }
         } else {
             unsafe {
-                JPC_PhysicsSystem_SetContactListener(self.raw, ptr::null_mut());
+                jolt::pin(self.raw).SetContactListener(ptr::null_mut());
             }
         }
     }
 
     pub fn optimize_broad_phase(&self) {
         unsafe {
-            JPC_PhysicsSystem_OptimizeBroadPhase(self.raw);
+            jolt::pin(self.raw).OptimizeBroadPhase();
         }
     }
 
@@ -119,13 +119,14 @@ impl PhysicsSystem {
         job_system: *mut JPC_JobSystemThreadPool,
     ) {
         unsafe {
-            JPC_PhysicsSystem_Update(
-                self.raw,
-                delta_time,
-                collision_steps,
-                temp_allocator,
-                job_system.cast::<JPC_JobSystem>(),
-            );
+            jolt::pin(self.raw)
+                .Update(
+                    delta_time,
+                    collision_steps,
+                    jolt::ffi::allocator_base(temp_allocator),
+                    job_system.cast::<JPC_JobSystem>(),
+                )
+                .0;
         }
     }
 
@@ -135,14 +136,14 @@ impl PhysicsSystem {
     /// This function will add a new ref to the constraint's refcount and keep
     /// it alive.
     pub unsafe fn add_constraint(&self, constraint: *mut JPC_Constraint) {
-        unsafe { JPC_PhysicsSystem_AddConstraint(self.raw, constraint) }
+        unsafe { jolt::pin(self.raw).AddConstraint(constraint) }
     }
 
     /// # Safety
     ///
     /// `constraint` must be valid for the duration of the call.
     pub unsafe fn remove_constraint(&self, constraint: *mut JPC_Constraint) {
-        unsafe { JPC_PhysicsSystem_RemoveConstraint(self.raw, constraint) }
+        unsafe { jolt::pin(self.raw).RemoveConstraint(constraint) }
     }
 
     /// # Safety
@@ -159,21 +160,23 @@ impl PhysicsSystem {
 
     pub fn body_interface(&self) -> BodyInterface<'_> {
         unsafe {
-            let raw = JPC_PhysicsSystem_GetBodyInterface(self.raw);
+            let raw = jolt::pin(self.raw).GetBodyInterface().get_unchecked_mut() as *mut _;
             BodyInterface::new(raw)
         }
     }
 
     pub fn body_interface_no_lock(&self) -> BodyInterface<'_> {
         unsafe {
-            let raw = JPC_PhysicsSystem_GetBodyInterfaceNoLock(self.raw);
+            let raw = jolt::pin(self.raw)
+                .GetBodyInterfaceNoLock()
+                .get_unchecked_mut() as *mut _;
             BodyInterface::new(raw)
         }
     }
 
     pub fn narrow_phase_query(&self) -> NarrowPhaseQuery<'_> {
         unsafe {
-            let raw = JPC_PhysicsSystem_GetNarrowPhaseQuery(self.raw);
+            let raw = (&*self.raw).GetNarrowPhaseQuery() as *const _;
             NarrowPhaseQuery::new(raw)
         }
     }

@@ -1,9 +1,10 @@
+use crate::jolt;
 use std::marker::PhantomData;
 
+use crate::raw::*;
 use glam::Quat;
-use joltc_sys::*;
 
-use crate::{Body, BodyId, IntoJolt, IntoRolt, ObjectLayer, RVec3, Vec3};
+use crate::{Body, BodyId, ObjectLayer, RVec3, Vec3};
 
 /// See also: Jolt's [`BodyInterface`](https://jrouwe.github.io/JoltPhysicsDocs/5.1.0/class_body_interface.html) class.
 pub struct BodyInterface<'physics_system> {
@@ -22,7 +23,8 @@ impl<'physics_system> BodyInterface<'physics_system> {
     /// # Safety
     /// `settings` must be initialized and valid, with a valid `Shape` pointer.
     pub unsafe fn create_body(&self, settings: &JPC_BodyCreationSettings) -> Option<Body<'_>> {
-        let raw = JPC_BodyInterface_CreateBody(self.raw, settings);
+        let settings = jolt::ffi::native_body_settings(settings).expect("native body settings");
+        let raw = jolt::pin(self.raw).CreateBody(&settings);
 
         if raw.is_null() {
             None
@@ -33,32 +35,34 @@ impl<'physics_system> BodyInterface<'physics_system> {
 
     pub fn add_body(&self, body_id: BodyId, activation_mode: JPC_Activation) {
         unsafe {
-            JPC_BodyInterface_AddBody(self.raw, body_id.raw(), activation_mode);
+            jolt::pin(self.raw).AddBody(
+                &jolt::BodyID(body_id.raw()),
+                jolt::EActivation(activation_mode),
+            );
         }
     }
 
     pub fn activate_body(&self, body_id: BodyId) {
         unsafe {
-            JPC_BodyInterface_ActivateBody(self.raw, body_id.raw());
+            jolt::pin(self.raw).ActivateBody(&jolt::BodyID(body_id.raw()));
         }
     }
 
     pub fn activate_bodies(&self, body_ids: &[BodyId]) {
         unsafe {
-            JPC_BodyInterface_ActivateBodies(
-                self.raw,
-                BodyId::slice_raw(body_ids).as_ptr(),
+            jolt::pin(self.raw).ActivateBodies(
+                (BodyId::slice_raw(body_ids).as_ptr()).cast(),
                 body_ids.len() as i32,
             );
         }
     }
 
     pub fn remove_body(&self, body_id: BodyId) {
-        unsafe { JPC_BodyInterface_RemoveBody(self.raw, body_id.raw()) }
+        unsafe { jolt::pin(self.raw).RemoveBody(&jolt::BodyID(body_id.raw())) }
     }
 
     pub fn destroy_body(&self, body_id: BodyId) {
-        unsafe { JPC_BodyInterface_DestroyBody(self.raw, body_id.raw()) }
+        unsafe { jolt::pin(self.raw).DestroyBody(&jolt::BodyID(body_id.raw())) }
     }
 
     /// # Safety
@@ -70,43 +74,52 @@ impl<'physics_system> BodyInterface<'physics_system> {
         update_mass_properties: bool,
         activation: JPC_Activation,
     ) {
-        JPC_BodyInterface_SetShape(
-            self.raw,
-            body_id.raw(),
+        (&*self.raw).SetShape(
+            &jolt::BodyID(body_id.raw()),
             shape,
             update_mass_properties,
-            activation,
+            jolt::EActivation(activation),
         )
     }
 
     pub fn is_active(&self, body_id: BodyId) -> bool {
-        unsafe { JPC_BodyInterface_IsActive(self.raw, body_id.raw()) }
+        unsafe { (&*self.raw).IsActive(&jolt::BodyID(body_id.raw())) }
     }
 
     pub fn user_data(&self, body_id: BodyId) -> u64 {
-        unsafe { JPC_BodyInterface_GetUserData(self.raw, body_id.raw()) }
+        unsafe { (&*self.raw).GetUserData(&jolt::BodyID(body_id.raw())) }
     }
 
     pub fn set_user_data(&self, body_id: BodyId, user_data: u64) {
-        unsafe { JPC_BodyInterface_SetUserData(self.raw, body_id.raw(), user_data) }
+        unsafe { (&*self.raw).SetUserData(&jolt::BodyID(body_id.raw()), user_data) }
     }
 
     pub fn center_of_mass_position(&self, body_id: BodyId) -> RVec3 {
-        unsafe { JPC_BodyInterface_GetCenterOfMassPosition(self.raw, body_id.raw()).into_rolt() }
+        unsafe {
+            (&*self.raw)
+                .GetCenterOfMassPosition(&jolt::BodyID(body_id.raw()))
+                .into()
+        }
     }
 
     pub fn linear_velocity(&self, body_id: BodyId) -> Vec3 {
-        unsafe { JPC_BodyInterface_GetLinearVelocity(self.raw, body_id.raw()).into_rolt() }
+        unsafe {
+            (&*self.raw)
+                .GetLinearVelocity(&jolt::BodyID(body_id.raw()))
+                .into()
+        }
     }
 
     pub fn set_linear_velocity(&self, body_id: BodyId, velocity: Vec3) {
         unsafe {
-            JPC_BodyInterface_SetLinearVelocity(self.raw, body_id.raw(), velocity.into_jolt());
+            jolt::pin(self.raw).SetLinearVelocity(&jolt::BodyID(body_id.raw()), (velocity).into());
         }
     }
 
     pub fn set_object_layer(&self, body_id: BodyId, object_layer: ObjectLayer) {
-        unsafe { JPC_BodyInterface_SetObjectLayer(self.raw, body_id.raw(), object_layer.raw()) }
+        unsafe {
+            jolt::pin(self.raw).SetObjectLayer(&jolt::BodyID(body_id.raw()), object_layer.raw())
+        }
     }
 
     pub fn notify_shape_changed(
@@ -117,12 +130,11 @@ impl<'physics_system> BodyInterface<'physics_system> {
         activation: JPC_Activation,
     ) {
         unsafe {
-            JPC_BodyInterface_NotifyShapeChanged(
-                self.raw,
-                body_id.raw(),
-                old_com.into_jolt(),
+            (&*self.raw).NotifyShapeChanged(
+                &jolt::BodyID(body_id.raw()),
+                (old_com).into(),
                 update_mass_properties,
-                activation,
+                jolt::EActivation(activation),
             )
         }
     }
@@ -135,12 +147,11 @@ impl<'physics_system> BodyInterface<'physics_system> {
         activation: JPC_Activation,
     ) {
         unsafe {
-            JPC_BodyInterface_SetPositionAndRotationWhenChanged(
-                self.raw,
-                body_id.raw(),
-                pos.into_jolt(),
-                rot.into_jolt(),
-                activation,
+            jolt::pin(self.raw).SetPositionAndRotationWhenChanged(
+                &jolt::BodyID(body_id.raw()),
+                (pos).into(),
+                (rot).into(),
+                jolt::EActivation(activation),
             )
         }
     }

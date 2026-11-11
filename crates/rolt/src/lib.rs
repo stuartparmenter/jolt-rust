@@ -1,16 +1,16 @@
-//! Safe Rust wrapper around [Jolt Physics](github.com/jrouwe/JoltPhysics) using
-//! [JoltC](https://github.com/SecondHalfGames/JoltC).
+//! Rust wrapper around Jolt Physics 5.6.1, connected directly through a private cxx bridge.
 //!
-//! These bindings are best-effort and incomplete. The [joltc-sys][joltc_sys]
-//! crate contains the unsafe bindings that this crate uses and covers a lot
-//! more of Jolt's API.
-//!
-//! These bindings target Jolt Physics 5.1.0. You can view the C++ documentation
-//! for this version of Jolt Physics here:
-//!
-//! <https://jrouwe.github.io/JoltPhysicsDocs/5.1.0/>
+//! The existing rolt API is retained. Low-level settings and raw operations are
+//! available in [`raw`]; no separate sys crate or JoltC library is required.
 
-use joltc_sys::*;
+mod jolt;
+/// Low-level settings, result types, and unsafe operations used by the rolt API.
+///
+/// These retain the historical `JPC_*` names for compatibility. The implementation
+/// calls Jolt C++ through a private cxx bridge, not through JoltC.
+pub mod raw;
+
+use crate::raw::*;
 
 mod body;
 mod body_interface;
@@ -35,9 +35,7 @@ pub use crate::traits::*;
 
 /// [`JPH::RegisterDefaultAllocator`](https://jrouwe.github.io/JoltPhysicsDocs/5.1.0/_memory_8h.html#a6ae804b1b68490f6e032ef6e7d9fc93e)
 pub fn register_default_allocator() {
-    unsafe {
-        JPC_RegisterDefaultAllocator();
-    }
+    unsafe { crate::jolt::ffi::RegisterDefaultAllocator() }
 }
 
 /// Creates a new global factory. Required for initialization and used by Jolt's
@@ -61,14 +59,10 @@ pub fn factory_delete() {
 
 /// [`JPH::RegisterTypes`](https://jrouwe.github.io/JoltPhysicsDocs/5.1.0/_register_types_8h.html#a033e662bc8b7d5a8acd9adcc692b7cb4)
 pub fn register_types() {
-    unsafe {
-        JPC_RegisterTypes();
-    }
+    unsafe { crate::jolt::ffi::RegisterTypes() }
 }
 
 /// [`JPH::UnregisterTypes`](https://jrouwe.github.io/JoltPhysicsDocs/5.1.0/_register_types_8h.html#a1e0db6031789e773039c7fc15ef47057)
 pub fn unregister_types() {
-    unsafe {
-        JPC_UnregisterTypes();
-    }
+    unsafe { crate::jolt::ffi::UnregisterTypes() }
 }

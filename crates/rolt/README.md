@@ -1,14 +1,10 @@
-# `rolt` — aspirationally safe Rust Jolt bindings
-This crate contains a higher-level wrapper around JoltC, providing ergonomics comparable to using Jolt from C++.
+# rolt
 
-The safety of this crate is currently provided on a best-effort basis.
+Existing rolt methods and traits over a private cxx bridge to Jolt Physics 5.6.1.
+No separate sys crate or JoltC library is used. Low-level settings, results and
+unsafe operations are exposed in `rolt::raw` with their existing `JPC_*` names.
 
-For more complete and unsafe bindings, see [joltc-sys](https://crates.io/crates/joltc-sys).
-
-## Build Requirements
-- CMake 3.16 or newer
-- `libclang`, see the [bindgen guide](https://rust-lang.github.io/rust-bindgen/requirements.html) for installation steps.
-
-## Features
-- `double-precision`: Forwards to `joltc-sys/double-precision`
-- `object-layer-u32`: Forwards to `joltc-sys/object-layer-u32`
+Use `asserts` to enable native Jolt assertions. The `double-precision` and
+`object-layer-u32` feature names are retained but currently rejected by this
+prototype. See the workspace README for build
+instructions.

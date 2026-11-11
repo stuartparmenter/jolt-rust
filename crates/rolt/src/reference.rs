@@ -1,7 +1,7 @@
 use std::mem;
 use std::ops::Deref;
 
-use joltc_sys::*;
+use crate::raw::*;
 
 /// Rust version of Jolt's [`RefTarget`](https://jrouwe.github.io/JoltPhysicsDocs/5.1.0/class_ref_target.html)
 /// CRTP.
@@ -29,11 +29,11 @@ pub unsafe trait RefCast<T> {
 
 unsafe impl RefTarget for JPC_Shape {
     unsafe fn add_ref(value: *const Self) {
-        JPC_Shape_AddRef(value);
+        (&*value).AddRef();
     }
 
     unsafe fn release(value: *const Self) {
-        JPC_Shape_Release(value);
+        (&*value).Release();
     }
 }
 
@@ -49,11 +49,11 @@ unsafe impl RefCast<JPC_Shape> for JPC_MutableCompoundShape {
 
 unsafe impl RefTarget for JPC_MutableCompoundShape {
     unsafe fn add_ref(value: *const Self) {
-        JPC_Shape_AddRef(value.cast::<JPC_Shape>());
+        (&*(value.cast::<JPC_Shape>())).AddRef();
     }
 
     unsafe fn release(value: *const Self) {
-        JPC_Shape_Release(value.cast::<JPC_Shape>());
+        (&*(value.cast::<JPC_Shape>())).Release();
     }
 }
 

@@ -1,3 +1,4 @@
 [workspace]
+members = ["crates/rolt", "crates/hello-world"]
+exclude = ["xtask", "vendor"]
 resolver = "2"
-members = ["crates/*"]

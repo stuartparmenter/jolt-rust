@@ -1,0 +1,5 @@
+Public constants and callback table declarations originate from
+SecondHalfGames/JoltC, revision 429235de52d20e547cb41cfa5f602986f16c85cb.
+Portions Copyright (c) 2024 Second Half Games. MIT OR Apache-2.0.
+No JoltC implementation is used. Public value/settings records are now cxx shared
+structs; native settings conversions are maintained in settings.inc.

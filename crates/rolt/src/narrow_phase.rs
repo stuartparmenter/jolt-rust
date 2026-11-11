@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 use std::mem;
 
-use joltc_sys::*;
+use crate::raw::*;
 
 use crate::{
     BodyFilterImpl, BodyId, BroadPhaseLayerFilterImpl, CastShapeBase, CastShapeCollector,

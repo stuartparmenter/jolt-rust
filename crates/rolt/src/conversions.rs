@@ -1,11 +1,11 @@
-/// Trait for converting a value from its corresponding [`joltc-sys`] type.
+/// Trait for converting a value from its corresponding [`crate::raw`] type.
 pub trait FromJolt {
     type Jolt;
 
     fn from_jolt(value: Self::Jolt) -> Self;
 }
 
-/// Trait for converting a value into its corresponding [`joltc-sys`] type.
+/// Trait for converting a value into its corresponding [`crate::raw`] type.
 pub trait IntoJolt {
     type Jolt;
 

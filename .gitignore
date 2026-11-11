@@ -1,1 +1,3 @@
-/target
+/vendor/
+/target/
+/xtask/target/

@@ -1,50 +1,34 @@
-# jolt-rust
-Rust bindings for [Jolt Physics](https://github.com/jrouwe/JoltPhysics) 5.6.0 using [JoltC].
+# rolt with cxx
 
-This project is an early work in progress. Watch for exposed nails.
+This branch preserves rolt's methods and traits while replacing JoltC and
+`joltc-sys` with a private `#[cxx::bridge]` to Jolt 5.6.1. Public settings and
+callback types move from `joltc_sys` to `rolt::raw`; their existing names remain.
+Heightfield creation is included, with a smoke test that settles a sphere on it.
 
-## Goals
-1. `joltc-sys`: Functioning, up-to-date unsafe bindings to Jolt Physics
-2. `rolt`: Ergonomic, safe bindings to Jolt Physics
+Requires Rust, a C++20 compiler, CMake 3.22+, Make and Git. Currently validated
+only on x86_64 Linux with single precision and u16 object layers; other
+configurations are rejected explicitly.
 
-## Crates
-
-### `joltc-sys` — Jolt bindings via [JoltC]
-This crate contains unsafe bindings to JoltC.
-
-```toml
-joltc-sys = "0.3.1"
+```sh
+cargo xtask setup
+cargo test --workspace
+cargo run -p hello-world
 ```
 
-Features:
-- `double-precision`: Enable higher precision simulation using doubles instead of floats.
-- `object-layer-u32`: Changes the ObjectLayer type to use 32 bits instead of 16 bits.
+Start reviewing at `crates/rolt/src/jolt.rs`: handwritten cxx declarations of
+actual Jolt methods. `native/callbacks.cpp` implements virtual callbacks;
+`native/shims.cpp` handles constructors and queries cxx cannot bind directly.
+Public settings and value records are declared in `crates/rolt/src/raw/bridge.rs`
+using cxx shared structs. cxx generates their Rust/C++ definitions and call glue.
+`native/settings.inc` converts these records to native Jolt settings; callback
+function-pointer tables remain in `raw/types.rs` and `native/types.h`.
+The former bindgen-only zero-length padding fields are omitted from shared records.
 
-### `rolt` — aspirationally safe Rust Jolt bindings
-This crate contains a higher-level wrapper around JoltC, providing ergonomics comparable to using Jolt from C++.
-
-The safety of this crate is currently provided on a best-effort basis.
-
-```toml
-rolt = "0.3.1"
-```
-
-Features:
-- `double-precision`: Forwards to `joltc-sys/double-precision`
-- `object-layer-u32`: Forwards to `joltc-sys/object-layer-u32`
-
-### `hello-world-sys` — HelloWorld using `joltc-sys`
-This is a port of Jolt's [HelloWorld] example to Rust using `jolt-sys`. It isn't pretty nor safe, but it does have identical behavior.
-
-### `hello-world` — HelloWorld using `rolt`
-This is a port of Jolt's [HelloWorld] example to Rust using the `jolt` crate. The goal of this example is to replicate the behavior of the original example entirely in safe Rust.
-
-## Submodules
-This repository uses Git submodules. Make sure to initialize submodules recursively so that JoltC and Jolt are both referenced correctly in your checkout:
-
-```bash
-git submodule update --init --recursive
-```
+No Python, bindgen, JoltC build, or separate sys crate is needed. Jolt source is
+fetched at the pinned revision in `upstream.toml` and is not committed.
+This is an experimental backend, not full coverage of the former raw sys API.
+Constraint construction, characters, vehicles and soft bodies are not included.
+The inherited CI matrix has not been adapted to this prototype.
 
 ## License
 Licensed under either of
