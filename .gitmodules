@@ -1,3 +1,4 @@
 [submodule "crates/joltc-sys/JoltC"]
 	path = crates/joltc-sys/JoltC
-	url = ../JoltC.git
+	url = https://github.com/stuartparmenter/JoltC.git
+	branch = game-dev
